@@ -16,7 +16,15 @@ Code to reproduce results of the paper Difference of Submodular Minimization via
 cd datasets 
 python mushroom.py
 ```
-
+# Citation
+```
+@InProceedings{elhalabi2023dsm,
+      title={Difference of Submodular Minimization via DC Programming}, 
+      author={Marwa El Halabi and George Orfanides and Tim Hoheisel},
+      booktitle = {Proceedings of the 40th International Conference on Machine Learning},
+      year={2023},
+}
+```
 ## Acknowledgements
 - We use some functions from [1] (mainly the implementation of MNP algorithm).
 - We use for plotting a modified version of the padcat function from [2].
