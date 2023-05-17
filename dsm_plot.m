@@ -18,7 +18,7 @@ for i=1:length(files)
     load(loaddir + files(i).name);
     ind_run = seed - 42 + 1;
     total_results.(method_name)(ind_run) = results.(method_name);
-    if ~ismember(method_name, ["mnp", "greedy", "pgm"])
+    if ~ismember(method_name, ["mnp", "greedy", "pgm"]) %
         % remove last iteration 
         total_results.(method_name)(ind_run).discrete_obj = total_results.(method_name)(ind_run).discrete_obj(1:end-1);
         total_results.(method_name)(ind_run).itertime = total_results.(method_name)(ind_run).itertime(1:end-1);
@@ -54,7 +54,7 @@ for method=methods_run
     for ind_run = 1:length(total_results.(method_name))
         total_results.(method_name)(ind_run).min_discrete = min(total_results.(method_name)(ind_run).discrete_obj);
         total_results.min_discrete(ind_run) = min([total_results.min_discrete(ind_run), total_results.(method_name)(ind_run).min_discrete]);
-        if ismember(method_class, ["regdc", "regdcRound", "regadc", "regadcRound", "regcdc", "regcdcRound"]) 
+        if ismember(method_class, ["regdc", "regdcRound", "regadc", "regadcRound", "regcdc", "regcdcRound", "pgm"]) %
                 total_results.(method_name)(ind_run).min_continuous = min(total_results.(method_name)(ind_run).continuous_obj);
                 total_results.min_continuous (ind_run) = min([total_results.min_continuous (ind_run), total_results.(method_name)(ind_run).min_continuous]);
         end
@@ -147,11 +147,11 @@ end
 %% plot discrete or continous objective vs iteration or time (only include best rho for DCA and CDCA)
 discrete = true;
 only_baselines = false;
-only_zerorho = false;
+only_zerorho = true;
 if discrete
-    classes = ["regdc","regadc", "regdcRound", "regadcRound", "regcdc", "regcdcRound","subsup","supsub", "modmod", "mnp", "greedy", "pgm"];
+    classes = ["regdc","regadc", "regdcRound", "regadcRound", "regcdc", "regcdcRound", "pgm", "subsup","supsub", "modmod", "mnp", "greedy"];
 else
-    classes = ["regdc","regadc", "regdcRound", "regadcRound", "regcdc", "regcdcRound"];
+    classes = ["regdc","regadc", "regdcRound", "regadcRound", "regcdc", "regcdcRound", "pgm"];
 end
 colors = distinguishable_colors(length(classes)-2); 
 colors = [colors(1, :); colors(1, :);colors(2, :); colors(2, :); colors(3:end, :)];
@@ -159,13 +159,13 @@ lines = ["-x", "--x", "-*", "--*", "-o", "-s", "-p", "-h", "-d", "-^", "-+", "-v
 figure%('Position', [0, 0, 600, 400])
 hold all
 labels = [];
-xaxis = "iterations"; %  "iterations", "time (sec)"
+xaxis = "time (sec)"; %  "iterations", "time (sec)"
 
 if only_baselines
-    classes_ind = 8:length(classes);
+    classes_ind = [7, 9:length(classes)];
     delta_time = 10;
 elseif only_zerorho
-    classes_ind = [1,3,7];
+    classes_ind = [1,3,8];
 else
     classes_ind = 1:length(classes);
 end
@@ -287,7 +287,7 @@ nrhos = length(rhos);
 colors = distinguishable_colors(nrhos); 
 lines = ["-x","-*", "-o", "-s", "-p", "-h"];
 xaxis =  "iterations"; %  "iterations", "time (sec)"
-discrete = false;
+discrete = true;
 figure('Position', 0.8*get(0, 'Screensize'))
 index = reshape(1:length(classes),3,2).';
 if ~islogical(discrete) && discrete == "gap"
@@ -419,7 +419,11 @@ function [x, y] = get_xy(method_name, method_class, discrete, total_results, inc
 
     elseif ismember(method_class,["mnp", "modmod", "supsub", "greedy", "pgm", "bruteforce"]) && (xaxis == "iterations")
             x = (1:outer_maxiter)';
-            y = [total_results.(method_name).min_discrete] .* ones(outer_maxiter, 1) -  min_obj(1:nseeds_run) + eps;
+            if discrete
+                y = [total_results.(method_name).min_discrete] .* ones(outer_maxiter, 1) -  min_obj(1:nseeds_run) + eps;
+            else
+                y = [total_results.(method_name).min_continuous] .* ones(outer_maxiter, 1) -  min_obj(1:nseeds_run) + eps;
+            end
             if include_zero
                  y = [y(1,:); y];
                  x = [0; x];

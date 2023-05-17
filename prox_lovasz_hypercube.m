@@ -1,4 +1,4 @@
-function [w_hat, obj_values, avg_gaps, itertime] = prox_lovasz_hypercube(F,V,y,rho, maxiter, tol, step_size, w_init, L, round)
+function [w_hat, obj_values, avg_gaps, itertime, w_hat_round, obj_values_round] = prox_lovasz_hypercube(F,V,y,rho, maxiter, tol, step_size, w_init, L, round)
 % Compute "prox" of f_L: argmin_{w in [0, 1]^n} f_L(w) + rho/2 ||w||^2 - w^Ty
 % using projected subgradient descent
 % See section 3.2.3 p. 132 in "Introductory Lectures on Convex Programming"
@@ -15,11 +15,12 @@ n = length(V);
 if nargin < 7
     w = zeros(n,1);
 else 
-    w = w_init;
+    w = w_init; % assumed to be integral if round
 end
 w_avg = w;
 %w_best = w;
 best_obj = 0.5*rho*norm(w)^2 - w'*y + lovasz_extension(w,F);
+best_obj_round = best_obj;
 s_avg = zeros(n,1); % I tried warm starting s too, but it didn't help much 
 D = sqrt(n);
 if L == Inf % use upper bound sqrt(sum_i F(i)^2)
@@ -32,7 +33,7 @@ end
 L = L + norm(y)+ rho* D;
 
 itertime = zeros(maxiter, 1);
-%best_obj_values = zeros(1, maxiter);
+obj_values_round = zeros(maxiter, 1);
 obj_values = zeros(maxiter, 1);
 avg_gaps = zeros(maxiter, 1); % avg gap is guaranteed to converge (see Bach_learning_new section 7.2). 
 %I also computed gaps of current iterates and best iterates, but these did not converge in the few exps I ran 
@@ -54,24 +55,24 @@ for iter =1:maxiter
         s_avg = (s_avg * (iter-1) + 2*s)/(iter+1);
     end
     
-    if round
+    if round % return sol with best obj (to be consistent with what we did in "Optimal approximation for unconstrained non-submodular minimization")
         [w_round, F_round] = round_lovasz(w, F, values, order);
-        obj_values(iter) = 0.5*rho*length(w_round)^2 - sum(y(w_round)) + F_round;
-        if obj_values(iter) < best_obj
-            w_hat = w_round;
+        obj_values_round(iter) = 0.5*rho*length(w_round)^2 - sum(y(w_round)) + F_round;
+        if obj_values_round(iter) < best_obj_round
+            w_hat = w;
+            w_hat_round = w_round;
+            obj_values(iter) = 0.5*rho*norm(w)^2 - w'*y + s'*w;
             best_obj = obj_values(iter);
+            best_obj_round = obj_values_round(iter);
         else
+            obj_values_round(iter) = best_obj_round;
             obj_values(iter) = best_obj;
         end
     else 
         w_hat = w_avg;
         obj_values(iter) = 0.5*rho*norm(w_avg)^2 - w_avg'*y + lovasz_extension(w_avg,F);
     end
-%     if obj_values(iter) < best_obj
-%         w_best = w;
-%         best_obj = obj_values(iter);
-%     end
-    %best_obj_values(iter) = best_obj;
+
     
     % compute duality gap
     z_avg = min(max(-s_avg/rho, 0),1);
@@ -99,8 +100,8 @@ for iter =1:maxiter
     w = min(max(w,0),1);
 
 end
+obj_values_round = obj_values_round(1:iter);
 obj_values = obj_values(1:iter);
-%best_obj_values = best_obj_values(1:iter);
 avg_gaps = avg_gaps(1:iter);
 itertime = itertime(1:iter);
 end

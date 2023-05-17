@@ -64,12 +64,12 @@ function dsm_test(nruns, dataset, lambda, task_id, job_id, resultsdir)
         
      elseif ismember(method, [regcdc_variants, regcdcRound_variants])
         param.(method_name).fw_maxiter = 10;
-        param.(method_name).prox_maxiter = inner_maxiter; 
+        param.(method_name).inner_maxiter = inner_maxiter; 
         param.(method_name).maxiter = outer_maxiter; %ceil(maxiter/(param.(method_name).fw_maxiter*inner_maxiter));
         param.(method_name).perms = [1,2,3];
         param.(method_name).rho = str2num(rho_str);
         param.(method_name).fw_gap = inner_tol;
-        param.(method_name).prox_tol = inner_tol;
+        param.(method_name).inner_tol = inner_tol;
         param.(method_name).tol = outer_tol;
         param.(method_name).ls = false;
         param.(method_name).warm_start = true; 
