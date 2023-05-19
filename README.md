@@ -1,7 +1,7 @@
 # Difference of Submodular Minimization via DC Programming
 
 
-Code to reproduce results of the paper Difference of Submodular Minimization via DC Programming
+Code to reproduce results of the paper [Difference of Submodular Minimization via DC Programming](https://arxiv.org/pdf/2305.11046.pdf)
 
 ## To reproduce results in the paper
 - run dsm_job.sh script 
